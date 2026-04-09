@@ -1,0 +1,5 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
+nfl_data_py==0.3.3
+pandas==1.5.3
+numpy==1.26.

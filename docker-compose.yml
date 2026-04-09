@@ -1,0 +1,48 @@
+services:
+
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nfl
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pipeline:
+    build: ./backend/pipeline
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nfl
+    restart: "no"
+
+  api:
+    build: ./backend/api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nfl
+    ports:
+      - "8000:8000"
+    restart: always
+
+  scheduler:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - pipeline
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scheduler.ini:/etc/ofelia/config.ini
+    restart: always
+
+volumes:
+  postgres_data:
