@@ -26,7 +26,7 @@ from psycopg2.extras import execute_values
 # ---------------------------------------------------------------------------
 
 INFERENCE_YEAR = 2025
-ALL_YEARS      = list(range(2020, 2026))  # need history to build rolling stats
+ALL_YEARS      = [2025]
 
 EWM_SPAN       = 16
 
