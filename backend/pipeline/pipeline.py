@@ -31,11 +31,11 @@ ALL_YEARS      = [2025]
 EWM_SPAN       = 16
 
 # Always point to the best model
-#MODEL_PATH  = "model_v1_65pct.pt"
-MODEL_PATH  = "model_v2.pt"
+MODEL_PATH  = "model_v1_65pct.pt"
+#MODEL_PATH  = "model_v2.pt"
 
-#SCALER_PATH = "scaler_v1_65pct.pkl"
-SCALER_PATH = "scaler_v2.pkl"
+SCALER_PATH = "scaler_v1_65pct.pkl"
+#SCALER_PATH = "scaler_v2.pkl"
 
 
 DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/nfl")
