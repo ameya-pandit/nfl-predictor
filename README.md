@@ -2,7 +2,7 @@
 
 A full-stack machine learning system that predicts NFL game outcomes using a Siamese neural network trained on historical play-by-play data. Achieved **65% accuracy** on the 2025 season (156W – 81L).
 
-**Live site:** [nfl-predictor-mu.vercel.app](https://nfl-predictor-mu.vercel.app)
+**Live site:** [modelthegame.com](https://modelthegame.com)
 
 ---
 
