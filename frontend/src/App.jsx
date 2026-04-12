@@ -17,7 +17,7 @@ const WEEK_FULL = (w) => {
   if (w === 20) return "Divisional Round";
   if (w === 21) return "Conference Championships";
   if (w === 22) return "Super Bowl";
-  return `Week ${w}`;
+  return `WEEK ${w}`;
 };
 
 const TEAM_COLORS = {
@@ -66,18 +66,42 @@ function GameCard({ game }) {
   const absMargin = Math.abs(game.predicted_margin).toFixed(1);
   const isCompleted = game.actual_margin !== null && game.actual_margin !== undefined;
   const correct = game.correct_pick === 1;
+  const winnerColor = TEAM_COLORS[game.predicted_winner] || "#333";
+
+  const shadeOpacity = 0.45;
+
+  // Boost dark colors by blending with white
+  const r = parseInt(winnerColor.slice(1,3), 16);
+  const g = parseInt(winnerColor.slice(3,5), 16);
+  const b = parseInt(winnerColor.slice(5,7), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  const boostedColor = brightness < 100
+  ? `rgb(${Math.min(Math.round(r*2.5),255)}, ${Math.min(Math.round(g*2.5),255)}, ${Math.min(Math.round(b*2.5),255)})`
+  : winnerColor;
 
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-4 border transition-all duration-200 hover:scale-[1.01]"
+      className="rounded-2xl flex flex-col gap-4 border transition-all duration-200 hover:scale-[1.01] overflow-hidden relative"
       style={{
-        background: "rgba(255,255,255,0.03)",
         borderColor: isCompleted
-          ? correct ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"
+          ? correct ? "rgba(34,197,94,0.8)" : "rgba(239,68,68,0.8)"
           : "rgba(255,255,255,0.08)",
+        borderWidth: isCompleted ? "3px" : "1px",
       }}
     >
-      <div className="flex items-center justify-between gap-4">
+      {/* Winner shade background */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: homeWins
+            ? `linear-gradient(to right, ${boostedColor} 0%, transparent 50%)`
+            : `linear-gradient(to left, ${boostedColor} 0%, transparent 50%)`,
+          opacity: shadeOpacity,
+        }}
+      />
+
+      {/* Teams row */}
+      <div className="flex items-center justify-between gap-4 p-5 relative">
         <TeamBlock team={game.home_team} isWinner={homeWins} />
         <div className="flex flex-col items-center gap-1">
           <span className="text-xs text-gray-500 uppercase tracking-widest font-semibold">vs</span>
@@ -87,7 +111,8 @@ function GameCard({ game }) {
         <TeamBlock team={game.away_team} isWinner={!homeWins} />
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-white/5">
+      {/* Bottom bar */}
+      <div className="flex items-center justify-between px-5 pb-5 border-t border-white/5 pt-3 relative">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: conf.color }} />
           <span className="text-xs font-semibold tracking-wide" style={{ color: conf.color }}>
@@ -109,7 +134,6 @@ function GameCard({ game }) {
     </div>
   );
 }
-
 function PerformanceBar({ label, wins, losses, accuracy }) {
   const pct = Math.round((accuracy || 0) * 100);
   return (
@@ -191,13 +215,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-white" style={{ background: "#0a0a0f", fontFamily: "'DM Mono', monospace" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;900&display=swap" rel="stylesheet" />
 
       {/* Header */}
       <header className="border-b border-white/5 px-6 py-5">
         <div className="max-w-5xl mx-auto flex items-baseline justify-between">
-          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "2.2rem", letterSpacing: "0.08em", color: "#f0c040" }}>
-            NFL PREDICTOR
+          <h1 style={{ fontSize: "2.2rem", letterSpacing: "0.08em", color: "#f0c040", fontWeight: 900 }}>
+            MODEL THE NFL
           </h1>
           {seasonRecord && (
             <div className="flex items-baseline gap-2">
@@ -248,7 +272,7 @@ export default function App() {
       <main className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-8">
         {/* Week title */}
         <div className="flex items-baseline gap-3">
-          <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.6rem", letterSpacing: "0.06em", color: "#fff" }}>
+          <h2 style={{ fontSize: "1.6rem", letterSpacing: "0.06em", color: "#fff", fontWeight: 900 }}>
             {WEEK_FULL(week)}
           </h2>
           <span className="text-xs text-gray-500">{predictions.length} matchups</span>
@@ -267,8 +291,8 @@ export default function App() {
             className="rounded-2xl p-6 border border-white/8 flex flex-col gap-6"
             style={{ background: "rgba(255,255,255,0.02)" }}
           >
-            <h3 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.2rem", letterSpacing: "0.06em", color: "#f0c040" }}>
-              Performance
+            <h3 style={{ fontSize: "1.2rem", letterSpacing: "0.06em", color: "#f0c040", fontWeight: 900 }}>
+              PERFORMANCE
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PerformanceBar
