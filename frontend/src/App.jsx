@@ -156,7 +156,7 @@ function PerformanceBar({ label, wins, losses, accuracy }) {
   );
 }
 
-export default function App() {
+function Season2025() {
   const [week, setWeek] = useState(4);
   const [predictions, setPredictions] = useState([]);
   const [performance, setPerformance] = useState(null);
@@ -239,6 +239,18 @@ export default function App() {
           )}
         </div>
       </header>
+
+      {/* Back to landing */}
+      <div className="border-b border-white/5 px-6 py-3" style={{ background: "rgba(240,192,64,0.08)" }}>
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+          <span className="text-xs md:text-sm font-semibold tracking-wide text-gray-400">
+            Viewing the completed 2025 season
+          </span>
+          <a href="#/" className="text-xs md:text-sm font-bold tracking-wide" style={{ color: "#f0c040" }}>
+            ← 2026 season status
+          </a>
+        </div>
+      </div>
 
       {/* Week tabs */}
       <div className="border-b border-white/5 sticky top-0 z-10" style={{ background: "#0a0a0f" }}>
@@ -326,4 +338,44 @@ export default function App() {
       </main>
     </div>
   );
+}
+function Landing() {
+  return (
+    <div className="min-h-screen text-white flex items-center justify-center px-6" style={{ background: "#0a0a0f", fontFamily: "'DM Mono', monospace" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;900&display=swap" rel="stylesheet" />
+      <div className="max-w-xl flex flex-col gap-6 text-center items-center">
+        <h1 style={{ fontSize: "2.2rem", letterSpacing: "0.08em", color: "#f0c040", fontWeight: 900 }}>
+          MODEL THE NFL
+        </h1>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ borderColor: "rgba(240,192,64,0.4)", background: "rgba(240,192,64,0.08)" }}>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#f0c040" }} />
+          <span className="text-xs font-bold tracking-widest uppercase" style={{ color: "#f0c040" }}>2026 Season</span>
+        </div>
+        <p className="text-lg font-bold">The model is being trained for the 2026 season.</p>
+        <p className="text-sm text-gray-400 leading-relaxed">
+          It takes about 4 weeks of games for team stats to catch up to current trends,
+          so predictions will begin around Week 4. In the meantime, check out how the model did in 2025.
+        </p>
+        <a
+          href="#/2025"
+          className="px-5 py-2.5 rounded-lg text-sm font-bold tracking-widest uppercase transition-all duration-150 hover:scale-105"
+          style={{ background: "#f0c040", color: "#0a0a0f" }}
+        >
+          View 2025 season →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [hash, setHash] = useState(window.location.hash);
+
+  useEffect(() => {
+    const onChange = () => { setHash(window.location.hash); window.scrollTo(0, 0); };
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+
+  return hash === "#/2025" ? <Season2025 /> : <Landing />;
 }
