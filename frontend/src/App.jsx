@@ -176,8 +176,7 @@ function Season({ season }) {
       )
     ).then(() => {
       setAvailableWeeks(new Set(found));
-      const first = WEEKS.find((w) => found.has(w));
-      if (first) setWeek(first);
+      if (found.size > 0) setWeek(Math.max(...found));
     });
   }, []);
 
