@@ -25,8 +25,8 @@ from psycopg2.extras import execute_values
 # CONFIG
 # ---------------------------------------------------------------------------
 
-INFERENCE_YEAR = 2025
-ALL_YEARS      = [2025]
+INFERENCE_YEAR = int(os.getenv("SEASON", "2026"))
+ALL_YEARS      = [INFERENCE_YEAR]
 
 EWM_SPAN       = 16
 
@@ -312,6 +312,6 @@ if __name__ == "__main__":
     game_model       = build_game_model_df(team_state, context)
 
     results  = run_inference(game_model)
-    print(f"2025 accuracy: {results['correct_pick'].mean():.2%} over {len(results)} games")
+    print(f"{INFERENCE_YEAR} accuracy: {results['correct_pick'].mean():.2%} over {len(results)} games")
 
     write_to_db(team_state, results)

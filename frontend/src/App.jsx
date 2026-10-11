@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API_BASE = "https://nfl-predictor-api-production.up.railway.app";
+const API_BASE = import.meta.env.VITE_API_BASE ?? "https://nfl-predictor-api-production.up.railway.app";
 
 const WEEKS = Array.from({ length: 19 }, (_, i) => i + 4);
 
@@ -156,7 +156,7 @@ function PerformanceBar({ label, wins, losses, accuracy }) {
   );
 }
 
-function Season2025() {
+function Season({ season }) {
   const [week, setWeek] = useState(4);
   const [predictions, setPredictions] = useState([]);
   const [performance, setPerformance] = useState(null);
@@ -169,7 +169,7 @@ function Season2025() {
     const found = new Set();
     Promise.all(
       WEEKS.map((w) =>
-        fetch(`${API_BASE}/predictions?week=${w}`)
+        fetch(`${API_BASE}/predictions?week=${w}&season=${season}`)
           .then((r) => r.json())
           .then((data) => { if (Array.isArray(data) && data.length > 0) found.add(w); })
           .catch(() => {})
@@ -185,7 +185,7 @@ function Season2025() {
   useEffect(() => {
     if (availableWeeks.size === 0) return;
     const lastWeek = Math.max(...availableWeeks);
-    fetch(`${API_BASE}/performance?week=${lastWeek}`)
+    fetch(`${API_BASE}/performance?week=${lastWeek}&season=${season}`)
       .then((r) => r.json())
       .then((data) => { if (data && !data.detail) setSeasonRecord(data); })
       .catch(() => {});
@@ -197,12 +197,12 @@ function Season2025() {
     setPredictions([]);
     setPerformance(null);
 
-    fetch(`${API_BASE}/predictions?week=${week}`)
+    fetch(`${API_BASE}/predictions?week=${week}&season=${season}`)
       .then((r) => r.json())
       .then((data) => setPredictions(Array.isArray(data) ? data : []))
       .catch(() => setPredictions([]));
 
-    fetch(`${API_BASE}/performance?week=${week}`)
+    fetch(`${API_BASE}/performance?week=${week}&season=${season}`)
       .then((r) => r.json())
       .then((data) => { if (data && !data.detail) setPerformance(data); })
       .catch(() => setPerformance(null))
@@ -225,7 +225,7 @@ function Season2025() {
           </h1>
           {seasonRecord && (
             <div className="flex items-baseline gap-2">
-              <span className="text-xs text-gray-500 uppercase tracking-widest">2025 Season</span>
+              <span className="text-xs text-gray-500 uppercase tracking-widest">{season} Season</span>
               <span className="text-sm font-bold text-white tabular-nums">
                 {seasonRecord.cumulative_wins}W – {seasonRecord.cumulative_losses}L
               </span>
@@ -240,14 +240,20 @@ function Season2025() {
         </div>
       </header>
 
-      {/* Back to landing */}
+      {/* Season notice */}
       <div className="border-b border-white/5 px-6 py-3" style={{ background: "rgba(240,192,64,0.08)" }}>
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
           <span className="text-xs md:text-sm font-semibold tracking-wide text-gray-400">
-            Viewing the completed 2025 season
+            {season === 2025
+              ? "Viewing the completed 2025 season"
+              : "Predictions start in Week 4, once the stats have enough games to reflect current trends"}
           </span>
-          <a href="#/" className="text-xs md:text-sm font-bold tracking-wide" style={{ color: "#f0c040" }}>
-            ← 2026 season status
+          <a
+            href={season === 2025 ? "#/" : "#/2025"}
+            className="text-xs md:text-sm font-bold tracking-wide whitespace-nowrap"
+            style={{ color: "#f0c040" }}
+          >
+            {season === 2025 ? "← 2026 season" : "2025 season →"}
           </a>
         </div>
       </div>
@@ -339,35 +345,6 @@ function Season2025() {
     </div>
   );
 }
-function Landing() {
-  return (
-    <div className="min-h-screen text-white flex items-center justify-center px-6" style={{ background: "#0a0a0f", fontFamily: "'DM Mono', monospace" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;900&display=swap" rel="stylesheet" />
-      <div className="max-w-xl flex flex-col gap-6 text-center items-center">
-        <h1 style={{ fontSize: "2.2rem", letterSpacing: "0.08em", color: "#f0c040", fontWeight: 900 }}>
-          MODEL THE NFL
-        </h1>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" style={{ borderColor: "rgba(240,192,64,0.4)", background: "rgba(240,192,64,0.08)" }}>
-          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#f0c040" }} />
-          <span className="text-xs font-bold tracking-widest uppercase" style={{ color: "#f0c040" }}>2026 Season</span>
-        </div>
-        <p className="text-lg font-bold">The model is being trained for the 2026 season.</p>
-        <p className="text-sm text-gray-400 leading-relaxed">
-          It takes about 4 weeks of games for team stats to catch up to current trends,
-          so predictions will begin around Week 4. In the meantime, check out how the model did in 2025.
-        </p>
-        <a
-          href="#/2025"
-          className="px-5 py-2.5 rounded-lg text-sm font-bold tracking-widest uppercase transition-all duration-150 hover:scale-105"
-          style={{ background: "#f0c040", color: "#0a0a0f" }}
-        >
-          View 2025 season →
-        </a>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const [hash, setHash] = useState(window.location.hash);
 
@@ -377,5 +354,6 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
 
-  return hash === "#/2025" ? <Season2025 /> : <Landing />;
+  const season = hash === "#/2025" ? 2025 : 2026;
+  return <Season key={season} season={season} />;
 }

@@ -44,7 +44,7 @@ def get_conn():
 # ---------------------------------------------------------------------------
 
 @app.get("/predictions")
-def get_predictions(week: int = Query(..., description="NFL week number")):
+def get_predictions(week: int = Query(..., description="NFL week number"), season: int = Query(2025, description="NFL season")):
     """
     Returns all matchups and predictions for a given week.
     If the week is completed, actual_margin and correct_pick are included.
@@ -63,9 +63,9 @@ def get_predictions(week: int = Query(..., description="NFL week number")):
                 actual_margin,
                 correct_pick
             FROM predictions
-            WHERE season = 2025 AND week = %s
+            WHERE season = %s AND week = %s
             ORDER BY confidence_tier DESC, ABS(predicted_margin) DESC
-        """, (week,))
+        """, (season, week))
         rows = cur.fetchall()
         cur.close()
         conn.close()
@@ -80,7 +80,7 @@ def get_predictions(week: int = Query(..., description="NFL week number")):
 
 
 @app.get("/performance")
-def get_performance(week: int = Query(..., description="NFL week number")):
+def get_performance(week: int = Query(..., description="NFL week number"), season: int = Query(2025, description="NFL season")):
     """
     Returns weekly and cumulative performance for a given week.
     Only meaningful if actual_margin is populated (week is completed).
@@ -97,10 +97,10 @@ def get_performance(week: int = Query(..., description="NFL week number")):
                 COUNT(*) - SUM(correct_pick)        AS weekly_losses,
                 ROUND(AVG(correct_pick)::numeric, 4) AS weekly_accuracy
             FROM predictions
-            WHERE season = 2025
+            WHERE season = %s
               AND week = %s
               AND actual_margin IS NOT NULL
-        """, (week,))
+        """, (season, week))
         weekly = dict(cur.fetchone())
 
         # Cumulative record through this week
@@ -111,10 +111,10 @@ def get_performance(week: int = Query(..., description="NFL week number")):
                 COUNT(*) - SUM(correct_pick)        AS cumulative_losses,
                 ROUND(AVG(correct_pick)::numeric, 4) AS cumulative_accuracy
             FROM predictions
-            WHERE season = 2025
+            WHERE season = %s
               AND week <= %s
               AND actual_margin IS NOT NULL
-        """, (week,))
+        """, (season, week))
         cumulative = dict(cur.fetchone())
 
         cur.close()
