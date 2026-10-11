@@ -240,18 +240,18 @@ function Season({ season }) {
         </div>
       </header>
 
-      {/* Season notice */}
+      {/* Season switch */}
       <div className="border-b border-white/5 px-6 py-3" style={{ background: "rgba(240,192,64,0.08)" }}>
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
-          <span className="text-xs md:text-sm font-semibold tracking-wide text-gray-400">
-            {season === 2025
-              ? "Viewing the completed 2025 season"
-              : "Predictions start in Week 4, once the stats have enough games to reflect current trends"}
-          </span>
+        <div className={`max-w-5xl mx-auto flex items-center gap-2 ${season === 2025 ? "justify-between" : "justify-end"}`}>
+          {season === 2025 && (
+            <span className="text-xs md:text-sm font-semibold tracking-wide text-gray-400">
+              Viewing the completed 2025 season
+            </span>
+          )}
           <a
             href={season === 2025 ? "#/" : "#/2025"}
-            className="text-xs md:text-sm font-bold tracking-wide whitespace-nowrap"
-            style={{ color: "#f0c040" }}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold tracking-widest uppercase whitespace-nowrap"
+            style={{ background: "#f0c040", color: "#0a0a0f" }}
           >
             {season === 2025 ? "← 2026 season" : "2025 season →"}
           </a>

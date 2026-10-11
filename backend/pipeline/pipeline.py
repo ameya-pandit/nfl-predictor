@@ -193,6 +193,32 @@ def build_rolling_features(gamelogs):
     return team_state[team_state["week"] > 3].dropna()
 
 
+def build_upcoming_state(gamelogs, sched):
+    """Forecast rows for the current week's unplayed games, using each team's rolling profile through their latest played game."""
+    available = [c for c in FEATURE_COLUMNS if c in gamelogs.columns]
+    latest = (
+        gamelogs.sort_values(["team", "season", "week"])
+        .groupby("team")[available]
+        .apply(lambda x: x.ewm(span=EWM_SPAN, adjust=True).mean().iloc[-1])
+        .add_prefix("rolling_")
+    )
+    unplayed = sched[sched["home_score"].isna() & (sched["week"] > 3)]
+    if unplayed.empty:
+        return pd.DataFrame()
+    unplayed = unplayed[unplayed["week"] == unplayed["week"].min()]
+
+    rows = []
+    for _, g in unplayed.iterrows():
+        home = RELOCATION_MAP.get(g["home_team"], g["home_team"])
+        away = RELOCATION_MAP.get(g["away_team"], g["away_team"])
+        if home not in latest.index or away not in latest.index:
+            continue
+        for team, opp in ((home, away), (away, home)):
+            rows.append({"season": int(g["season"]), "week": int(g["week"]), "team": team, "opponent": opp,
+                         "point_diff": np.nan, **latest.loc[team].to_dict()})
+    return pd.DataFrame(rows).sort_values("team", kind="stable").reset_index(drop=True)
+
+
 def build_context(sched):
     home = sched[["season", "week", "home_team", "gameday"]].rename(columns={"home_team": "team"})
     away = sched[["season", "week", "away_team", "gameday"]].rename(columns={"away_team": "team"})
@@ -247,7 +273,7 @@ def run_inference(game_model):
 
     test_df["predicted_margin"] = preds
     test_df["actual_margin"]    = test_df["point_diff_team"].values
-    test_df["correct_pick"]     = ((test_df["predicted_margin"] > 0) == (test_df["actual_margin"] > 0)).astype(int)
+    test_df["correct_pick"]     = ((test_df["predicted_margin"] > 0) == (test_df["actual_margin"] > 0)).astype(float).where(test_df["actual_margin"].notna())
     test_df["confidence_tier"]  = test_df["predicted_margin"].apply(lambda m: "toss_up" if abs(m) <= 3 else ("moderate" if abs(m) <= 7 else "high_confidence"))
     test_df["predicted_winner"] = test_df.apply(lambda r: r["team_team"] if r["predicted_margin"] > 0 else r["opponent_team"], axis=1)
     return test_df
@@ -309,9 +335,12 @@ if __name__ == "__main__":
     gamelogs         = build_gamelogs(off_df, def_df, st_df, matchups, pbp)
     team_state       = build_rolling_features(gamelogs)
     context          = build_context(sched)
-    game_model       = build_game_model_df(team_state, context)
+    upcoming         = build_upcoming_state(gamelogs, sched)
+    game_model       = build_game_model_df(pd.concat([team_state, upcoming], ignore_index=True), context)
 
     results  = run_inference(game_model)
-    print(f"{INFERENCE_YEAR} accuracy: {results['correct_pick'].mean():.2%} over {len(results)} games")
+    done     = results[results["actual_margin"].notna()]
+    print(f"{INFERENCE_YEAR} accuracy: {done['correct_pick'].mean():.2%} over {len(done) // 2} completed games")
+    print(f"Forecasts for {len(upcoming) // 2} upcoming games" + (f" (week {int(upcoming['week'].iloc[0])})" if len(upcoming) else ""))
 
     write_to_db(team_state, results)
