@@ -2,8 +2,11 @@ name: Weekly pipeline
 
 on:
   schedule:
-    # Tuesday and Wednesday, 14:00 UTC (after Monday night games). Reruns are safe: rows are upserted.
-    - cron: "0 14 * * 2,3"
+    # Off-peak minutes on purpose: GitHub delays or drops scheduled runs at the top of the hour.
+    # Tuesday x2 and Wednesday, after Monday night games. Reruns are safe: rows are upserted.
+    - cron: "17 14 * * 2"
+    - cron: "43 18 * * 2"
+    - cron: "17 14 * * 3"
   workflow_dispatch:
 
 concurrency:
